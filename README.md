@@ -1,6 +1,8 @@
 # PixelMelt
 
-![PixelMelt demo](./docs/pixelmelt-demo.png)
+[Try PixelMelt in your browser](https://dicnunz.github.io/demos/pixelmelt/)
+
+![PixelMelt workspace with a material canvas, scene files, playback, and brush controls](./docs/pixelmelt-workspace.jpg)
 
 PixelMelt is a desktop-first, local-only web app that turns a single image into a live falling-material simulation. Upload an image, convert it into a low-resolution material field, then melt it, flood it, burn it, poke it, and export an 8-second WebM clip without leaving the browser.
 
@@ -141,7 +143,7 @@ PixelMelt records directly from the display canvas using `canvas.captureStream()
 
 ```text
 public/demo/                  Seeded SVG/PNG demo images
-docs/pixelmelt-demo.png       README screenshot
+docs/pixelmelt-workspace.jpg   Current workspace screenshot
 src/components/               React UI and canvas stage
 src/lib/                      Worker bridge, rasterizer, recorder, helpers
 src/sim/                      Pure simulation, conversion, presets, and tests
