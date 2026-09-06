@@ -1,7 +1,5 @@
 # PixelMelt
 
-![PixelMelt generated seed source](./docs/generated/pixelmelt-astral-sigil.png)
-
 ![PixelMelt demo](./docs/pixelmelt-demo.png)
 
 PixelMelt is a desktop-first, local-only web app that turns a single image into a live falling-material simulation. Upload an image, convert it into a low-resolution material field, then melt it, flood it, burn it, poke it, and export an 8-second WebM clip without leaving the browser.
@@ -19,17 +17,6 @@ Best results come from faces, masks, flowers, logos, and other bold silhouettes 
 - Export an 8-second WebM clip from the live canvas.
 - Start instantly with four seeded demo images included in the repo, including the generated `Astral Sigil` mask.
 - Deploy the build output as a static site.
-
-If PixelMelt saves you time, the smallest paid support path is the $5 Codex run receipt: <https://nicdunz.gumroad.com/l/smrimu>.
-
-For self-serve browser/account/public-action control templates around export proof, approval lanes, handoffs, and go/no-go checks, use Agent Browser Operator OS: <https://nicdunz.gumroad.com/l/agent-browser-operator-os>.
-
-For browser-visual export prototypes that need a written review, there are also optional no-call audit paths:
-
-- Mini audit: <https://nicdunz.gumroad.com/l/agent-workflow-mini-audit>
-- Full workflow audit: <https://nicdunz.gumroad.com/l/agent-workflow-audit>
-
-Redacted source images, public static demos, export proof, and workflow notes only. Do not send private brand files, unreleased client assets, API keys, runtime AI credentials, or confidential product data. No custom asset generation or call is required. The browser operator kit is self-serve material only; it does not include Chrome plugin repair, guaranteed automation, account access, custom setup, calls, or posting without human approval.
 
 ## Stack
 
@@ -61,15 +48,6 @@ npm run build
 npm run preview
 npm run check
 ```
-
-## First Run In 20 Seconds
-
-1. Launch the app. `Astral Sigil` loads automatically.
-2. Click `Flood` or `Burn` to see how the same source rebuilds into a different scene.
-3. Drag on the stage with `Push`, then switch to `Spark` and click into the hot areas.
-4. Hit `Export 8s WebM` after you like the motion.
-
-If the export controls are disabled, wait for the stage to finish loading and show the first live frame.
 
 ## Demo Flow
 
@@ -145,12 +123,11 @@ src/workers/                  Simulation worker entrypoint
 
 ## Validation
 
-The current repo has been validated with:
+Checks available in this repository:
 
 - `npm run lint`
 - `npm test`
 - `npm run build`
-- local browser automation covering preset changes, tool interactions, upload, and WebM export
 
 ## Static Deployment
 
@@ -170,3 +147,7 @@ Deploy the resulting `dist/` directory to any static host. No environment variab
 ## License
 
 MIT
+
+## Project status
+
+AI-assisted personal project. Bundled examples and tests demonstrate a limited scope; they are not evidence of production use or independent validation.
