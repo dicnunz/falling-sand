@@ -26,7 +26,12 @@ async function loadDrawableFromBlob(blob: Blob): Promise<LoadedDrawable> {
   const image = new Image()
   image.decoding = 'async'
   image.src = objectUrl
-  await image.decode()
+  try {
+    await image.decode()
+  } catch {
+    URL.revokeObjectURL(objectUrl)
+    throw new Error('That image could not be decoded. Try a PNG, JPG, WebP, or SVG image.')
+  }
 
   return {
     drawable: image,
@@ -60,6 +65,8 @@ function rasterizeDrawable(drawable: LoadedDrawable, size: number): ImageData {
 }
 
 export async function rasterizeFileToImageData(file: File, size = GRID_SIZE): Promise<ImageData> {
+  if (!file.type.startsWith('image/')) throw new Error('Choose an image file, or use Open scene for a .pixelmelt file.')
+  if (file.size > 20 * 1024 * 1024) throw new Error('Choose an image smaller than 20 MB.')
   const drawable = await loadDrawableFromBlob(file)
   try {
     return rasterizeDrawable(drawable, size)

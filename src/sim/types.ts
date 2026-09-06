@@ -56,11 +56,11 @@ export interface TransferableSnapshot {
 }
 
 export type WorkerRequest =
-  | { type: 'load-scene'; snapshot: TransferableSnapshot }
+  | { type: 'load-scene'; snapshot: TransferableSnapshot; paused: boolean; requestId: number }
   | { type: 'set-paused'; paused: boolean }
   | { type: 'apply-brush'; brush: BrushEvent }
   | { type: 'step-burst'; frames: number; requestId: number }
-  | { type: 'request-frame' }
+  | { type: 'request-frame'; requestId?: number }
 
 export interface WorkerFrameResponse {
   type: 'frame'
