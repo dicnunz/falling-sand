@@ -35,10 +35,6 @@ interface CursorState {
   diameter: number
 }
 
-const SUPPORT_RECEIPT_URL = 'https://nicdunz.gumroad.com/l/smrimu'
-const BROWSER_OPERATOR_OS_URL = 'https://nicdunz.gumroad.com/l/agent-browser-operator-os'
-const MINI_AUDIT_URL = 'https://nicdunz.gumroad.com/l/agent-workflow-mini-audit'
-const WORKFLOW_AUDIT_URL = 'https://nicdunz.gumroad.com/l/agent-workflow-audit'
 
 function formatCompactCount(value: number): string {
   return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
@@ -72,7 +68,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
   const lastGridPointRef = useRef<{ x: number; y: number } | null>(null)
   const [hudPayload, setHudPayload] = useState<FramePayload | null>(null)
   const [cursor, setCursor] = useState<CursorState>({ visible: false, x: 0, y: 0, diameter: 12 })
-  const [hasExportedClip, setHasExportedClip] = useState(false)
   const recording = usePixelMeltStore((state) => state.recording)
   const setRecording = usePixelMeltStore((state) => state.setRecording)
 
@@ -251,7 +246,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
       const timestamp = new Date().toISOString().replaceAll(':', '-')
       const sourceSlug = slugifyFilenamePart(sourceLabel)
       downloadBlob(blob, `pixelmelt-${sourceSlug}-${activePreset}-${timestamp}.webm`)
-      setHasExportedClip(true)
 
       usePixelMeltStore.getState().setRecording({
         status: 'done',
@@ -308,49 +302,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
           >
             Export 8s WebM
           </button>
-          {hasExportedClip && (
-            <div className="max-w-[24rem] rounded-2xl border border-[var(--pm-warm)]/35 bg-[rgba(255,148,71,0.08)] px-3 py-2 text-right">
-              <div className="text-sm font-semibold text-white">Optional export audit</div>
-              <p className="mt-1 text-xs leading-5 text-[var(--pm-text-muted)]">
-                Redacted static demos only. No private brand files, API keys, runtime AI credentials,
-                Chrome plugin repair, guaranteed automation, account access, custom setup, calls, or public posting.
-              </p>
-              <div className="mt-2 flex flex-wrap justify-end gap-2">
-                <a
-                  href={SUPPORT_RECEIPT_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-white/10 px-3 py-1 text-xs font-semibold text-white/85 transition hover:border-white/30 hover:text-white"
-                >
-                  $5 receipt
-                </a>
-                <a
-                  href={BROWSER_OPERATOR_OS_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-[var(--pm-accent)]/35 bg-[rgba(109,226,196,0.1)] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[rgba(109,226,196,0.18)]"
-                >
-                  Operator OS $39
-                </a>
-                <a
-                  href={MINI_AUDIT_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-[var(--pm-warm)]/45 bg-[rgba(255,148,71,0.12)] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[rgba(255,148,71,0.2)]"
-                >
-                  Mini audit $149
-                </a>
-                <a
-                  href={WORKFLOW_AUDIT_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="rounded-full border border-[var(--pm-accent)]/35 bg-[rgba(109,226,196,0.1)] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[rgba(109,226,196,0.18)]"
-                >
-                  Workflow audit $750
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
