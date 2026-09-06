@@ -20,6 +20,9 @@ interface PixelMeltState {
   selectedDemoId: string
   sceneStatus: SceneStatus
   lastError: string | null
+  sceneNotice: string | null
+  savingScene: boolean
+  stepping: boolean
   recording: RecordingState
   setActivePreset: (preset: PresetId) => void
   setActiveTool: (tool: ToolId) => void
@@ -38,11 +41,14 @@ export const usePixelMeltStore = create<PixelMeltState>((set) => ({
   activeTool: 'push',
   brushSize: 6,
   brushIntensity: 0.72,
-  paused: false,
+  paused: true,
   sourceLabel: 'Astral Sigil',
   selectedDemoId: 'astral-sigil',
   sceneStatus: 'booting',
   lastError: null,
+  sceneNotice: null,
+  savingScene: false,
+  stepping: false,
   recording: {
     status: 'idle',
     remainingMs: 0,

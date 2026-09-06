@@ -7,6 +7,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react'
 import { cn } from '@/lib/cn'
+import { Icon } from '@/components/Icon'
+import { MATERIAL_INFO } from '@/sim/materials'
 import { downloadBlob, recordCanvasClip, supportsCanvasRecording } from '@/lib/recorder'
 import type { FramePayload, SimulationController } from '@/lib/simulation-controller'
 import { rgbaForCell } from '@/sim/palette'
@@ -22,6 +24,11 @@ interface CanvasStageProps {
   sourceLabel: string
   paused: boolean
   sceneStatus: 'booting' | 'loading' | 'ready' | 'error'
+  stepping: boolean
+  sourceLocked: boolean
+  onPauseToggle: () => void
+  onStep: () => void
+  onReset: () => void
 }
 
 export interface CanvasStageHandle {
@@ -36,14 +43,6 @@ interface CursorState {
 }
 
 
-function formatCompactCount(value: number): string {
-  return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)
-}
-
-function formatUiLabel(value: string): string {
-  return value.charAt(0).toUpperCase() + value.slice(1)
-}
-
 function slugifyFilenamePart(value: string): string {
   const normalized = value
     .toLowerCase()
@@ -55,7 +54,7 @@ function slugifyFilenamePart(value: string): string {
 }
 
 export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(function CanvasStage(
-  { controller, activeTool, activePreset, brushSize, brushIntensity, sourceLabel, paused, sceneStatus },
+  { controller, activeTool, activePreset, brushSize, brushIntensity, sourceLabel, paused, sceneStatus, stepping, sourceLocked, onPauseToggle, onStep, onReset },
   ref,
 ) {
   const displayCanvasRef = useRef<HTMLCanvasElement>(null)
@@ -117,11 +116,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
     bufferContext.putImageData(imageData, 0, 0)
     displayContext.clearRect(0, 0, canvas.width, canvas.height)
 
-    const background = displayContext.createLinearGradient(0, 0, canvas.width, canvas.height)
-    background.addColorStop(0, '#040812')
-    background.addColorStop(0.55, '#09111d')
-    background.addColorStop(1, '#02050b')
-    displayContext.fillStyle = background
+    displayContext.fillStyle = '#080c12'
     displayContext.fillRect(0, 0, canvas.width, canvas.height)
 
     displayContext.save()
@@ -129,23 +124,6 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
     displayContext.drawImage(bufferCanvas, 0, 0, canvas.width, canvas.height)
     displayContext.restore()
 
-    displayContext.fillStyle = 'rgba(255, 255, 255, 0.015)'
-    for (let y = 0; y < canvas.height; y += 8) {
-      displayContext.fillRect(0, y, canvas.width, 1)
-    }
-
-    const vignette = displayContext.createRadialGradient(
-      canvas.width * 0.5,
-      canvas.height * 0.4,
-      canvas.width * 0.08,
-      canvas.width * 0.5,
-      canvas.height * 0.5,
-      canvas.width * 0.75,
-    )
-    vignette.addColorStop(0, 'rgba(255, 255, 255, 0)')
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.35)')
-    displayContext.fillStyle = vignette
-    displayContext.fillRect(0, 0, canvas.width, canvas.height)
   }
 
   useEffect(() => {
@@ -154,15 +132,26 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
     }
 
     let lastHudUpdate = 0
-    return controller.subscribeFrame((payload) => {
+    let hudTimer: ReturnType<typeof setTimeout> | null = null
+    const updateHud = () => {
+      hudTimer = null
+      lastHudUpdate = performance.now()
+      setHudPayload(latestPayloadRef.current)
+    }
+    const unsubscribe = controller.subscribeFrame((payload) => {
       latestPayloadRef.current = payload
       drawFrame(payload)
-      const now = performance.now()
-      if (now - lastHudUpdate > 120) {
-        lastHudUpdate = now
-        setHudPayload(payload)
+      if (performance.now() - lastHudUpdate >= 120) {
+        if (hudTimer) clearTimeout(hudTimer)
+        updateHud()
+      } else if (!hudTimer) {
+        hudTimer = setTimeout(updateHud, 120 - (performance.now() - lastHudUpdate))
       }
     })
+    return () => {
+      unsubscribe()
+      if (hudTimer) clearTimeout(hudTimer)
+    }
   }, [controller])
 
   function mapPointer(event: ReactPointerEvent<HTMLCanvasElement>) {
@@ -209,7 +198,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
 
   async function recordClip(): Promise<void> {
     const canvas = displayCanvasRef.current
-    if (!canvas || sceneStatus !== 'ready' || !latestPayloadRef.current) {
+    const recordingStatus = usePixelMeltStore.getState().recording.status
+    if (!canvas || sceneStatus !== 'ready' || !latestPayloadRef.current || recordingStatus === 'recording' || recordingStatus === 'saving') {
       return
     }
 
@@ -254,6 +244,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
       })
 
       window.setTimeout(() => {
+        if (usePixelMeltStore.getState().recording.status !== 'done') return
         usePixelMeltStore.getState().setRecording({
           status: 'idle',
           remainingMs: 0,
@@ -274,61 +265,26 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
   }))
 
   const metrics = hudPayload?.metrics
-  const hasFrame = Boolean(hudPayload)
-  const exportDisabled = sceneStatus !== 'ready' || !hasFrame || recording.status === 'recording' || recording.status === 'saving'
+  const ready = sceneStatus === 'ready'
+  const counts = [metrics?.sandCells, metrics?.waterCells, metrics?.stoneCells, metrics?.emberCells, metrics?.smokeCells]
 
   return (
-    <section className="pm-panel relative flex min-h-[calc(100vh-3rem)] flex-1 flex-col overflow-hidden rounded-[32px]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(109,226,196,0.08),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(255,148,71,0.08),transparent_30%)]" />
-      <div className="relative flex items-center justify-between gap-4 border-b border-white/8 px-6 py-4">
-        <div>
-          <div className="font-mono text-[0.72rem] uppercase tracking-[0.24em] text-white/45">Stage</div>
-          <div className="mt-1 text-lg font-semibold text-white">{sourceLabel}</div>
-          <div className="text-sm text-[var(--pm-text-muted)]">
-            {formatUiLabel(activePreset)} scene • {formatUiLabel(activeTool)} brush • {paused ? 'paused' : 'live worker sim'}
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <button
-            type="button"
-            onClick={() => void recordClip()}
-            disabled={exportDisabled}
-            className={cn(
-              'rounded-full border px-4 py-2 text-sm font-semibold transition',
-              exportDisabled
-                ? 'cursor-not-allowed border-white/10 bg-white/[0.03] text-white/45'
-                : 'border-[var(--pm-warm)] bg-[rgba(255,148,71,0.12)] text-white hover:bg-[rgba(255,148,71,0.2)]',
-            )}
-          >
-            Export 8s WebM
-          </button>
-        </div>
+    <section className="canvas-stage" aria-label="Simulation workspace">
+      <div className="stage-heading">
+        <div className="scene-title"><h1>{sourceLabel}</h1><span>168 × 168 material field</span></div>
+        <span className={cn('simulation-state', ready && !paused && 'is-running')}><span />{sceneStatus === 'loading' || sceneStatus === 'booting' ? 'Loading' : sceneStatus === 'error' ? 'Unavailable' : paused ? 'Paused' : 'Running'}</span>
       </div>
-
-      <div className="relative flex flex-1 items-center justify-center px-6 py-6">
-        {sceneStatus === 'ready' && (
-          <div className="pointer-events-none absolute left-6 top-6 hidden max-w-sm xl:block">
-            <div className="rounded-[24px] border border-white/8 bg-[rgba(7,11,19,0.72)] px-4 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.22)] backdrop-blur">
-              <div className="font-mono text-[0.68rem] uppercase tracking-[0.24em] text-white/40">Quick pass</div>
-              <p className="mt-2 text-sm leading-6 text-white/85">
-                Pick a bold source, rebuild with a preset, then drag with Push or click with Spark before exporting the exact frame state you like.
-              </p>
-              <p className="mt-2 text-xs leading-5 text-[var(--pm-text-muted)]">
-                Best with faces, masks, flowers, logos, and silhouettes that have clear contrast and some empty space around them.
-              </p>
-            </div>
-          </div>
-        )}
-
-        <div className="relative flex aspect-square w-full max-w-[880px] items-center justify-center rounded-[30px] border border-white/10 bg-[rgba(2,5,11,0.72)] p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <div className="canvas-surface">
+        <div className="canvas-wrap">
           <canvas
             ref={displayCanvasRef}
             width={DISPLAY_SIZE}
             height={DISPLAY_SIZE}
+            tabIndex={0}
+            aria-label="Material simulation canvas"
+            aria-describedby="canvas-help"
             onPointerDown={(event) => {
-              if (!controller || sceneStatus !== 'ready') {
-                return
-              }
+              if (!controller || !ready || event.button !== 0) return
               event.currentTarget.setPointerCapture(event.pointerId)
               draggingRef.current = true
               const point = mapPointer(event)
@@ -339,104 +295,41 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
             onPointerMove={(event) => {
               const point = mapPointer(event)
               setCursor({ visible: true, x: point.displayX, y: point.displayY, diameter: point.diameter })
-              if (!draggingRef.current || sceneStatus !== 'ready') {
-                return
-              }
-              applyPointerTool(point.gridX, point.gridY)
+              if (draggingRef.current && ready) applyPointerTool(point.gridX, point.gridY)
             }}
             onPointerUp={(event) => {
               draggingRef.current = false
               lastGridPointRef.current = null
-              event.currentTarget.releasePointerCapture(event.pointerId)
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
+              if (event.pointerType === 'touch') setCursor((current) => ({ ...current, visible: false }))
             }}
             onPointerLeave={() => {
-              if (!draggingRef.current) {
-                setCursor((current) => ({ ...current, visible: false }))
-              }
+              if (!draggingRef.current) setCursor((current) => ({ ...current, visible: false }))
             }}
             onPointerCancel={() => {
               draggingRef.current = false
               lastGridPointRef.current = null
+              setCursor((current) => ({ ...current, visible: false }))
             }}
-            className="aspect-square h-full w-full rounded-[24px] border border-white/8 bg-black/30 shadow-[0_30px_60px_rgba(0,0,0,0.45)] [touch-action:none]"
           />
-
-          <div className="pointer-events-none absolute inset-0">
-            {cursor.visible && sceneStatus === 'ready' && (
-              <div
-                className={cn(
-                  'absolute rounded-full border transition',
-                  activeTool === 'spark'
-                    ? 'border-orange-300/80 bg-orange-400/10'
-                    : activeTool === 'erase'
-                      ? 'border-white/70 bg-white/5'
-                      : 'border-[var(--pm-accent)] bg-[rgba(109,226,196,0.08)]',
-                )}
-                style={{
-                  width: `${Math.max(10, cursor.diameter)}px`,
-                  height: `${Math.max(10, cursor.diameter)}px`,
-                  left: `${cursor.x}px`,
-                  top: `${cursor.y}px`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              />
-            )}
-          </div>
-
-          {!hasFrame && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[24px] bg-[rgba(2,5,11,0.55)]">
-              <div className="max-w-sm text-center">
-                <div className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-white/50">Booting</div>
-                <p className="text-lg font-semibold text-white">
-                  Spinning up the worker-driven material sim.
-                </p>
-                <p className="mt-2 text-sm leading-6 text-[var(--pm-text-muted)]">
-                  The default demo loads automatically, then you can swap demos or upload your own image.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {sceneStatus === 'loading' && (
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-[24px] bg-[rgba(2,5,11,0.45)]">
-              <div className="rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-white">
-                Rebuilding material map…
-              </div>
-            </div>
-          )}
+          {cursor.visible && ready && <div className={cn('brush-cursor', `brush-${activeTool}`)} style={{ width: Math.max(10, cursor.diameter), height: Math.max(10, cursor.diameter), left: cursor.x, top: cursor.y }} />}
+          {(sceneStatus === 'loading' || sceneStatus === 'booting') && <div className="canvas-overlay"><span className="loading-indicator" /><span>Preparing material field…</span></div>}
+          {sceneStatus === 'error' && <div className="canvas-overlay"><strong>Could not load the scene</strong><span>Choose another image or open a saved scene.</span></div>}
+          {recording.status === 'recording' && <span className="recording-indicator"><span />Recording · {(recording.remainingMs / 1000).toFixed(1)}s</span>}
         </div>
       </div>
-
-      <div className="relative grid gap-3 border-t border-white/8 px-6 py-4 md:grid-cols-4">
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-white/40">Active cells</div>
-          <div className="mt-1 text-xl font-semibold text-white">{metrics ? formatCompactCount(metrics.activeCells) : '—'}</div>
+      <div className="playback-bar">
+        <div className="playback-buttons">
+          <button className="button button-play" type="button" onClick={onPauseToggle} disabled={!ready} title="Play / pause (Space)"><Icon name={paused ? 'play' : 'pause'} size={16} />{paused ? 'Play' : 'Pause'}</button>
+          <button className="button button-subtle" type="button" onClick={onStep} disabled={!ready || !paused || stepping} title="Advance one simulation tick (.)"><Icon name="step" size={16} />Step</button>
+          <button className="button button-subtle" type="button" onClick={onReset} disabled={!ready || sourceLocked} title="Rebuild the current preset from the original source"><Icon name="reset" size={16} />Reset</button>
         </div>
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-white/40">Water / Ember</div>
-          <div className="mt-1 text-xl font-semibold text-white">
-            {metrics ? `${formatCompactCount(metrics.waterCells)} / ${formatCompactCount(metrics.emberCells)}` : '—'}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-white/40">Smoke / Stone</div>
-          <div className="mt-1 text-xl font-semibold text-white">
-            {metrics ? `${formatCompactCount(metrics.smokeCells)} / ${formatCompactCount(metrics.stoneCells)}` : '—'}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3">
-          <div className="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-white/40">Status</div>
-          <div className="mt-1 text-xl font-semibold text-white">
-            {recording.status === 'recording'
-              ? `${(recording.remainingMs / 1000).toFixed(1)}s left`
-              : paused
-                ? 'Paused'
-                : hasFrame
-                  ? `Tick ${metrics?.tick ?? 0}`
-                  : 'Loading'}
-          </div>
-        </div>
+        <span className="tick-counter">Tick <output data-testid="tick-count">{metrics?.tick.toLocaleString() ?? '—'}</output></span>
       </div>
+      <div className="material-meter" aria-label="Material cell counts">
+        {Object.values(MATERIAL_INFO).map((material, index) => <span key={material.id} title={material.hint}><i style={{ background: material.swatch }} />{material.label}<strong>{counts[index]?.toLocaleString() ?? '—'}</strong></span>)}
+      </div>
+      <div className="canvas-help" id="canvas-help"><span>{activeTool === 'push' ? 'Drag across the canvas to push materials.' : activeTool === 'spark' ? 'Click or drag to add embers.' : 'Brush across the canvas to erase materials.'}</span><span className="keyboard-hint"><kbd>Space</kbd> play / pause</span></div>
     </section>
   )
 })

@@ -42,9 +42,9 @@ workerScope.addEventListener('message', (event: MessageEvent<WorkerRequest>) => 
   switch (message.type) {
     case 'load-scene':
       currentSnapshot = hydrateSnapshot(message.snapshot)
-      currentSnapshot.tick = 0
+      paused = message.paused
       lastFrameSentAt = 0
-      emitFrame()
+      emitFrame(message.requestId)
       break
 
     case 'set-paused':
@@ -65,7 +65,7 @@ workerScope.addEventListener('message', (event: MessageEvent<WorkerRequest>) => 
       break
 
     case 'request-frame':
-      emitFrame()
+      emitFrame(message.requestId)
       break
 
     default:
