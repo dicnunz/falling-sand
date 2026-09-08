@@ -1,4 +1,4 @@
-# PixelMelt
+# Sandglass
 
 [Try PixelMelt in your browser](https://dicnunz.github.io/demos/pixelmelt/)
 
