@@ -1,4 +1,4 @@
-# Sandglass
+# Falling Sand
 
 [Try PixelMelt in your browser](https://dicnunz.github.io/demos/pixelmelt/)
 
