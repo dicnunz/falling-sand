@@ -116,7 +116,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
     bufferContext.putImageData(imageData, 0, 0)
     displayContext.clearRect(0, 0, canvas.width, canvas.height)
 
-    displayContext.fillStyle = '#080c12'
+    displayContext.fillStyle = '#202320'
     displayContext.fillRect(0, 0, canvas.width, canvas.height)
 
     displayContext.save()
@@ -235,7 +235,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
 
       const timestamp = new Date().toISOString().replaceAll(':', '-')
       const sourceSlug = slugifyFilenamePart(sourceLabel)
-      downloadBlob(blob, `pixelmelt-${sourceSlug}-${activePreset}-${timestamp}.webm`)
+      downloadBlob(blob, `bagnold-${sourceSlug}-${activePreset}-${timestamp}.webm`)
 
       usePixelMeltStore.getState().setRecording({
         status: 'done',
@@ -255,7 +255,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
       usePixelMeltStore.getState().setRecording({
         status: 'error',
         remainingMs: 0,
-        message: error instanceof Error ? error.message : 'PixelMelt could not export the clip.',
+        message: error instanceof Error ? error.message : 'Bagnold could not export the clip.',
       })
     }
   }
@@ -271,7 +271,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
   return (
     <section className="canvas-stage" aria-label="Simulation workspace">
       <div className="stage-heading">
-        <div className="scene-title"><h1>{sourceLabel}</h1><span>168 × 168 material field</span></div>
+        <div className="scene-title"><h1>{sourceLabel}</h1><span>168 × 168 cells</span></div>
         <span className={cn('simulation-state', ready && !paused && 'is-running')}><span />{sceneStatus === 'loading' || sceneStatus === 'booting' ? 'Loading' : sceneStatus === 'error' ? 'Unavailable' : paused ? 'Paused' : 'Running'}</span>
       </div>
       <div className="canvas-surface">

@@ -7,10 +7,10 @@ import { SIMULATION_FPS, type DemoScene } from '@/sim/types'
 import { usePixelMeltStore } from '@/store/use-pixelmelt-store'
 
 const DEMOS: DemoScene[] = [
-  { id: 'astral-sigil', name: 'Astral Sigil', description: 'Glass and stone mask.', src: `${import.meta.env.BASE_URL}demo/astral-sigil.png` },
-  { id: 'molten-echo', name: 'Molten Echo', description: 'Warm mask with ember seams.', src: `${import.meta.env.BASE_URL}demo/molten-echo.svg` },
-  { id: 'tidal-idol', name: 'Tidal Idol', description: 'Stone and water sculpture.', src: `${import.meta.env.BASE_URL}demo/tidal-idol.svg` },
-  { id: 'ember-bloom', name: 'Ember Bloom', description: 'Layered petals and embers.', src: `${import.meta.env.BASE_URL}demo/ember-bloom.svg` },
+  { id: 'strata', name: 'Strata', description: 'Layered sediment.', src: `${import.meta.env.BASE_URL}demo/strata.svg` },
+  { id: 'arch', name: 'Arch', description: 'Suspended stone.', src: `${import.meta.env.BASE_URL}demo/arch.svg` },
+  { id: 'reservoir', name: 'Reservoir', description: 'Water over sand.', src: `${import.meta.env.BASE_URL}demo/reservoir.svg` },
+  { id: 'fault', name: 'Fault', description: 'Separated strata.', src: `${import.meta.env.BASE_URL}demo/fault.svg` },
 ]
 
 export default function App() {
@@ -63,7 +63,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <a className="brand" href="./" aria-label="PixelMelt home"><span className="brand-mark"><i /><i /><i /><i /></span><span>PixelMelt<span className="brand-description">Material playground</span></span></a>
+        <a className="brand" href="./" aria-label="Bagnold home"><span>Bagnold<span className="brand-description">A study of falling matter</span></span></a>
         <div className="file-actions">
           <button type="button" className="button button-subtle" disabled={sourceLocked || state.sceneStatus === 'booting'} onClick={() => sceneInputRef.current?.click()}><Icon name="open" />Open scene</button>
           <button type="button" className="button button-outline" disabled={!ready || sourceLocked} onClick={() => void saveScene()}><Icon name="save" />{state.savingScene ? 'Saving…' : 'Save scene'}</button>
@@ -79,7 +79,7 @@ export default function App() {
         <CanvasStage ref={stageRef} controller={controller} activeTool={state.activeTool} activePreset={state.activePreset} brushSize={state.brushSize} brushIntensity={state.brushIntensity} sourceLabel={state.sourceLabel} paused={state.paused} sceneStatus={state.sceneStatus} stepping={state.stepping} sourceLocked={sourceLocked} onPauseToggle={togglePause} onStep={() => void step()} onReset={() => rebuild(state.activePreset)} />
         <ControlPanel demos={DEMOS} selectedDemoId={state.selectedDemoId} sceneStatus={state.sceneStatus} activePreset={state.activePreset} activeTool={state.activeTool} brushSize={state.brushSize} brushIntensity={state.brushIntensity} sourceLocked={sourceLocked} onSelectDemo={loadDemo} onUpload={uploadImage} onPresetChange={rebuild} onToolChange={state.setActiveTool} onBrushSizeChange={state.setBrushSize} onBrushIntensityChange={state.setBrushIntensity} />
       </main>
-      <footer className="app-footer"><span>Image → materials → motion</span><span>Save a scene to keep experimenting. Record a clip to share it.</span></footer>
+
     </div>
   )
 }

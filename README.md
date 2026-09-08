@@ -1,10 +1,10 @@
-# Falling Sand
+# Bagnold
 
-[Try PixelMelt in your browser](https://dicnunz.github.io/demos/pixelmelt/)
+[Try Bagnold in your browser](https://dicnunz.github.io/demos/pixelmelt/)
 
-![PixelMelt workspace with a material canvas, scene files, playback, and brush controls](./docs/pixelmelt-workspace.jpg)
+![Bagnold workspace with a material canvas, scene files, playback, and brush controls](./docs/pixelmelt-workspace.jpg)
 
-PixelMelt turns an image into a falling-material simulation in the browser. Upload an image, choose Melt, Flood, or Burn, interact with the canvas, and export an 8-second WebM clip.
+Bagnold turns an image into a falling-material simulation in the browser. Upload an image, choose Melt, Flood, or Burn, interact with the canvas, and export an 8-second WebM clip.
 
 The entire product runs client-side. There is no backend, no auth, no database, and no paid API dependency.
 
@@ -38,7 +38,7 @@ npm run check
 - Save exact simulation snapshots as `.pixelmelt` scene files and reopen them later.
 - Pause, advance one tick, reset, or use keyboard shortcuts from a canvas-first workspace.
 - Export an 8-second WebM clip from the live canvas.
-- Start instantly with four seeded demo images included in the repo, including the generated `Astral Sigil` mask.
+- Start instantly with four seeded demo images included in the repo, with layered sediment, an arch, a reservoir, and a fault.
 - Deploy the build output as a static site.
 
 ## Stack
@@ -55,7 +55,7 @@ npm run check
 
 ## Usage
 
-1. Launch the app. `Astral Sigil` loads automatically, paused so you can inspect it.
+1. Launch the app. `Strata` loads automatically, paused so you can inspect it.
 2. Click `Play` to start the simulation, or `Step` to advance a single tick.
 3. Click `Melt`, `Flood`, or `Burn` to rebuild the scene from the same source image.
 4. Drag on the stage with `Push` to shove loose material around.
@@ -88,7 +88,7 @@ Shortcuts leave text fields and sliders alone. Mouse and touch drawing both work
 - High-contrast subjects read best at `168x168`.
 - Clear silhouettes usually produce the most dramatic melt and burn passes.
 - Transparent or simple backgrounds convert more cleanly than busy photos.
-- The included `Astral Sigil` source is a good stress test: sharp glass edges, black negative space, and hot stone details make the burn and melt presets visibly different.
+- The included `Strata` source separates sediment layers above a stone base so each preset is easy to inspect.
 - Portraits, icons, flowers, masks, and graphic shapes are the sweet spot.
 
 ## How It Works
@@ -137,7 +137,7 @@ Worker load and snapshot requests carry IDs, acknowledge completion, and reject 
 
 ### 5. Clip Export
 
-PixelMelt records directly from the display canvas using `canvas.captureStream()` and `MediaRecorder`. Export is intentionally fixed to 8 seconds so the output is lightweight and easy to share, and the downloaded file name includes the active source and preset.
+Bagnold records directly from the display canvas using `canvas.captureStream()` and `MediaRecorder`. Export is intentionally fixed to 8 seconds so the output is lightweight and easy to share, and the downloaded file name includes the active source and preset.
 
 ## Project Structure
 
@@ -161,7 +161,7 @@ Checks available in this repository:
 
 ## Static Deployment
 
-PixelMelt builds to plain static assets:
+Bagnold builds to plain static assets:
 
 ```bash
 npm run build
@@ -187,3 +187,7 @@ MIT
 ## Project status
 
 AI-assisted personal project. Bundled examples and tests demonstrate a limited scope; they are not evidence of production use or independent validation.
+
+## Design reference
+
+The specimen field and compact control bank take their cues from physical granular-flow experiments. The name refers to [R. A. Bagnold’s sediment-transport research](https://www.usgs.gov/publications/approach-sediment-transport-problem-general-physics). This is a cellular material playground, not a validated implementation of that research. Existing `.pixelmelt` scene files remain supported.

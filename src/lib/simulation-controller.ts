@@ -39,8 +39,8 @@ export function createSimulationController(): SimulationController {
     errorListeners.forEach((listener) => listener(error))
   }
 
-  worker.addEventListener('error', () => fail(new Error('The simulation stopped unexpectedly. Reload PixelMelt to restart it.')))
-  worker.addEventListener('messageerror', () => fail(new Error('The simulation returned an unreadable frame. Reload PixelMelt to restart it.')))
+  worker.addEventListener('error', () => fail(new Error('The simulation stopped unexpectedly. Reload Bagnold to restart it.')))
+  worker.addEventListener('messageerror', () => fail(new Error('The simulation returned an unreadable frame. Reload Bagnold to restart it.')))
   worker.addEventListener('message', (event: MessageEvent<WorkerResponse>) => {
     const message = event.data
     if (message.type !== 'frame' || failure) return
@@ -71,7 +71,7 @@ export function createSimulationController(): SimulationController {
       const id = ++requestId
       const timer = setTimeout(() => {
         // Late load acknowledgements cannot safely reconcile the visible scene.
-        fail(new Error('The simulation did not respond. Reload PixelMelt to restart it.'))
+        fail(new Error('The simulation did not respond. Reload Bagnold to restart it.'))
       }, 10_000)
       pending.set(id, { resolve, reject, timer })
       try {

@@ -48,7 +48,7 @@ function rasterizeDrawable(drawable: LoadedDrawable, size: number): ImageData {
   const context = canvas.getContext('2d', { willReadFrequently: true })
 
   if (!context) {
-    throw new Error('PixelMelt could not create a rasterization context.')
+    throw new Error('Bagnold could not create a rasterization context.')
   }
 
   context.clearRect(0, 0, size, size)
@@ -78,7 +78,7 @@ export async function rasterizeFileToImageData(file: File, size = GRID_SIZE): Pr
 export async function rasterizeUrlToImageData(url: string, size = GRID_SIZE): Promise<ImageData> {
   const response = await fetch(url)
   if (!response.ok) {
-    throw new Error(`PixelMelt could not load ${url}.`)
+    throw new Error(`Bagnold could not load ${url}.`)
   }
 
   const blob = await response.blob()
