@@ -4,13 +4,32 @@
 
 ![PixelMelt workspace with a material canvas, scene files, playback, and brush controls](./docs/pixelmelt-workspace.jpg)
 
-PixelMelt is a desktop-first, local-only web app that turns a single image into a live falling-material simulation. Upload an image, convert it into a low-resolution material field, then melt it, flood it, burn it, poke it, and export an 8-second WebM clip without leaving the browser.
+PixelMelt turns an image into a falling-material simulation in the browser. Upload an image, choose Melt, Flood, or Burn, interact with the canvas, and export an 8-second WebM clip.
 
 The entire product runs client-side. There is no backend, no auth, no database, and no paid API dependency.
 
 Best results come from faces, masks, flowers, logos, and other bold silhouettes with clear contrast and some negative space around the subject.
 
-## Highlights
+## Quick Start
+
+```bash
+npm install
+npm run dev
+```
+
+Then open the local Vite URL printed in the terminal.
+
+Useful commands:
+
+```bash
+npm run lint
+npm test
+npm run build
+npm run preview
+npm run check
+```
+
+## Features
 
 - Upload one image and convert it into a 168x168 material map.
 - Run the simulation in a Web Worker and render it with crisp nearest-neighbor upscaling on HTML5 Canvas.
@@ -34,26 +53,7 @@ Best results come from faces, masks, flowers, logos, and other bold silhouettes 
 - Vitest
 - Playwright (local browser validation)
 
-## Quick Start
-
-```bash
-npm install
-npm run dev
-```
-
-Then open the local Vite URL printed in the terminal.
-
-Useful commands:
-
-```bash
-npm run lint
-npm test
-npm run build
-npm run preview
-npm run check
-```
-
-## Demo Flow
+## Usage
 
 1. Launch the app. `Astral Sigil` loads automatically, paused so you can inspect it.
 2. Click `Play` to start the simulation, or `Step` to advance a single tick.
