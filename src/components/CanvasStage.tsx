@@ -64,6 +64,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
   const latestGridHeightRef = useRef(168)
   const latestPayloadRef = useRef<FramePayload | null>(null)
   const draggingRef = useRef(false)
+  const activePointerRef = useRef<number | null>(null)
   const lastGridPointRef = useRef<{ x: number; y: number } | null>(null)
   const [hudPayload, setHudPayload] = useState<FramePayload | null>(null)
   const [cursor, setCursor] = useState<CursorState>({ visible: false, x: 0, y: 0, diameter: 12 })
@@ -255,7 +256,7 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
       usePixelMeltStore.getState().setRecording({
         status: 'error',
         remainingMs: 0,
-        message: error instanceof Error ? error.message : 'Bagnold could not export the clip.',
+        message: error instanceof Error ? error.message : 'Falling Sand could not export the clip.',
       })
     }
   }
@@ -284,7 +285,8 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
             aria-label="Material simulation canvas"
             aria-describedby="canvas-help"
             onPointerDown={(event) => {
-              if (!controller || !ready || event.button !== 0) return
+              if (!controller || !ready || event.button !== 0 || activePointerRef.current !== null) return
+              activePointerRef.current = event.pointerId
               event.currentTarget.setPointerCapture(event.pointerId)
               draggingRef.current = true
               const point = mapPointer(event)
@@ -293,11 +295,14 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
               applyPointerTool(point.gridX, point.gridY)
             }}
             onPointerMove={(event) => {
+              if (activePointerRef.current !== null && activePointerRef.current !== event.pointerId) return
               const point = mapPointer(event)
               setCursor({ visible: true, x: point.displayX, y: point.displayY, diameter: point.diameter })
               if (draggingRef.current && ready) applyPointerTool(point.gridX, point.gridY)
             }}
             onPointerUp={(event) => {
+              if (activePointerRef.current !== event.pointerId) return
+              activePointerRef.current = null
               draggingRef.current = false
               lastGridPointRef.current = null
               if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId)
@@ -306,7 +311,16 @@ export const CanvasStage = forwardRef<CanvasStageHandle, CanvasStageProps>(funct
             onPointerLeave={() => {
               if (!draggingRef.current) setCursor((current) => ({ ...current, visible: false }))
             }}
-            onPointerCancel={() => {
+            onLostPointerCapture={(event) => {
+              if (activePointerRef.current !== event.pointerId) return
+              activePointerRef.current = null
+              draggingRef.current = false
+              lastGridPointRef.current = null
+              setCursor((current) => ({ ...current, visible: false }))
+            }}
+            onPointerCancel={(event) => {
+              if (activePointerRef.current !== event.pointerId) return
+              activePointerRef.current = null
               draggingRef.current = false
               lastGridPointRef.current = null
               setCursor((current) => ({ ...current, visible: false }))

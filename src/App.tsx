@@ -63,7 +63,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <a className="brand" href="./" aria-label="Bagnold home"><span>Bagnold<span className="brand-description">A study of falling matter</span></span></a>
+        <a className="brand" href="./" aria-label="Falling Sand home"><span>Falling Sand<span className="brand-description">A study of falling matter</span></span></a>
         <div className="file-actions">
           <button type="button" className="button button-subtle" disabled={sourceLocked || state.sceneStatus === 'booting'} onClick={() => sceneInputRef.current?.click()}><Icon name="open" />Open scene</button>
           <button type="button" className="button button-outline" disabled={!ready || sourceLocked} onClick={() => void saveScene()}><Icon name="save" />{state.savingScene ? 'Saving…' : 'Save scene'}</button>

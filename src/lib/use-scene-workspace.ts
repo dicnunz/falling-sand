@@ -77,7 +77,7 @@ export function useSceneWorkspace(defaultDemo: DemoScene) {
       onError(error) {
         usePixelMeltStore.setState({
           sceneStatus: !engineFailed && baseRef.current ? 'ready' : 'error',
-          lastError: error instanceof Error ? error.message : 'Bagnold could not load this scene.',
+          lastError: error instanceof Error ? error.message : 'Falling Sand could not load this scene.',
         })
         nextController.setPaused(usePixelMeltStore.getState().paused)
       },
