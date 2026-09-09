@@ -1,193 +1,57 @@
-# Bagnold
+# Falling Sand
 
-[Try Bagnold in your browser](https://dicnunz.github.io/demos/pixelmelt/)
+A browser simulation that converts images into sand, water, stone, embers, and smoke on a 168×168 grid. Images stay in the browser.
 
-![Bagnold workspace with a material canvas, scene files, playback, and brush controls](./docs/pixelmelt-workspace.jpg)
+[Open demo](https://dicnunz.github.io/demos/pixelmelt/)
 
-Bagnold turns an image into a falling-material simulation in the browser. Upload an image, choose Melt, Flood, or Burn, interact with the canvas, and export an 8-second WebM clip.
+![Material canvas with playback and brush controls](./docs/pixelmelt-workspace.jpg)
 
-The entire product runs client-side. There is no backend, no auth, no database, and no paid API dependency.
+## Run
 
-Best results come from faces, masks, flowers, logos, and other bold silhouettes with clear contrast and some negative space around the subject.
-
-## Quick Start
-
-```bash
+```sh
 npm install
 npm run dev
 ```
 
-Then open the local Vite URL printed in the terminal.
+Open the Vite URL printed in the terminal. `npm run check` runs lint, tests, and the production build.
 
-Useful commands:
+## Use
 
-```bash
-npm run lint
-npm test
-npm run build
-npm run preview
-npm run check
-```
+The included Strata scene opens paused. Press Play, or Step to advance one tick. Upload an image up to 20 MB; simple backgrounds and clear silhouettes survive the small grid best.
 
-## Features
+Melt, Flood, and Burn rebuild from the source material map. Push moves loose material, Spark adds embers and smoke, and Erase removes cells. Draw with a mouse or touch.
 
-- Upload one image and convert it into a 168x168 material map.
-- Run the simulation in a Web Worker and render it with crisp nearest-neighbor upscaling on HTML5 Canvas.
-- Switch between three scene presets: `Melt`, `Flood`, and `Burn`.
-- Interact directly with the simulation using `Push`, `Spark`, and `Erase`.
-- Save exact simulation snapshots as `.pixelmelt` scene files and reopen them later.
-- Pause, advance one tick, reset, or use keyboard shortcuts from a canvas-first workspace.
-- Export an 8-second WebM clip from the live canvas.
-- Start instantly with four seeded demo images included in the repo, with layered sediment, an arch, a reservoir, and a fault.
-- Deploy the build output as a static site.
-
-## Stack
-
-- Vite
-- React 19
-- TypeScript
-- Tailwind CSS v4
-- Zustand
-- HTML5 Canvas
-- Web Worker
-- Vitest
-- Playwright (local browser validation)
-
-## Usage
-
-1. Launch the app. `Strata` loads automatically, paused so you can inspect it.
-2. Click `Play` to start the simulation, or `Step` to advance a single tick.
-3. Click `Melt`, `Flood`, or `Burn` to rebuild the scene from the same source image.
-4. Drag on the stage with `Push` to shove loose material around.
-5. Switch to `Spark` and click into the scene to create ember bursts and smoke.
-6. Switch to `Erase` to carve vents or remove buildup.
-7. Upload your own image with the drop zone or file picker.
-8. Click `Save scene` to keep an editable snapshot, or `Record 8s clip` to export a WebM of the live simulation.
-
-## Save and Resume a Scene
-
-`Save scene` downloads a `.pixelmelt` file with the current material and charge maps, simulation tick and seed, original source material map, preset, and brush settings. Saving requests a fresh worker snapshot, including brush events queued before the save. The original source image itself is not required to reopen the scene.
-
-Use `Open scene` to restore a file. Restored scenes always open **paused**, retaining the saved tick and seed so the simulation can continue exactly in this engine version. Presets and `Reset` still rebuild from the original source map. An image upload starts a new source; opening a scene restores an existing experiment.
-
-Scene files use a versioned JSON format, fixed to the 168×168 grid. Imports validate both complete maps, material IDs, byte values, settings, and version before committing them. Invalid or unsupported files show an error while the last usable scene remains available. Files larger than 1 MB are rejected before reading. Image uploads are limited to 20 MB.
-
-There is no automatic browser persistence: download a scene before refreshing or closing the page. Scene files contain the source's material representation, so treat them as you would the source image when sharing.
-
-| Shortcut | Action |
+| Key | Action |
 | --- | --- |
 | Space | Play / pause |
 | 1, 2, 3 | Push, Spark, Erase |
-| [ and ] | Decrease / increase brush radius |
-| . | Advance one tick while paused |
+| [ and ] | Brush radius |
+| . | Step while paused |
 
-Shortcuts leave text fields and sliders alone. Mouse and touch drawing both work on the canvas.
+Shortcuts do not intercept text fields or sliders.
 
-## Source Image Tips
+## Save and export
 
-- High-contrast subjects read best at `168x168`.
-- Clear silhouettes usually produce the most dramatic melt and burn passes.
-- Transparent or simple backgrounds convert more cleanly than busy photos.
-- The included `Strata` source separates sediment layers above a stone base so each preset is easy to inspect.
-- Portraits, icons, flowers, masks, and graphic shapes are the sweet spot.
+Save scene downloads a `.pixelmelt` file containing the current material and charge maps, tick, seed, source material map, preset, and brush settings. It includes brush events queued before saving. Open scene restores it paused, with exact continuation within this engine version. Reset and preset changes still use the saved source map; the original image is unnecessary.
 
-## How It Works
+Imports validate the version, grid, maps, and settings before replacing the current scene. Invalid files leave the previous scene available. Scene files are limited to 1 MB and contain a material representation of the source image. There is no automatic persistence; save before closing or refreshing.
 
-### 1. Image Conversion
+Record 8s clip exports the canvas as WebM through `captureStream()` and `MediaRecorder`. Recording requires browser support for those APIs; use Chrome, Edge, or Firefox.
 
-The uploaded image is rasterized into a square 168x168 working grid. A conversion pass samples luminance, saturation, alpha, and background similarity to classify each cell as one of:
+## Implementation
 
-- `sand`
-- `water`
-- `stone`
-- `ember`
-- `smoke`
-- `empty`
+React and TypeScript, built with Vite. A Web Worker steps the cellular rules in [`src/sim`](./src/sim); Canvas renders without image smoothing. The [scene-file module](./src/lib/scene-file.ts) defines the versioned format. Tests cover deterministic stepping, scene roundtrips and continuation, invalid imports, concurrent loads, and worker failures.
 
-The conversion output becomes the base scene for all presets.
+This is an AI-assisted personal experiment with cellular rules. Its examples and tests do not establish physical accuracy or production use. The interface is designed for desktop use.
 
-### 2. Preset Rebuilds
+## Deploy
 
-Each preset is a deterministic transform on top of the base material map:
-
-- `Melt` weakens exposed stone into sand and seeds hot drips near the lower silhouette.
-- `Flood` pushes water across the top edge and left side of the scene.
-- `Burn` ignites exposed surfaces and seeds smoke above hot cells.
-
-Because presets rebuild from the base snapshot, users can switch modes without re-uploading the image.
-
-### 3. Simulation Loop
-
-The simulation runs inside [`src/workers/simulation.worker.ts`](./src/workers/simulation.worker.ts). The worker advances the grid at 60 FPS and posts frames back to the main thread at 30 FPS.
-
-The core update rules live in pure modules under [`src/sim`](./src/sim):
-
-- [`src/sim/simulation.ts`](./src/sim/simulation.ts): particle stepping rules
-- [`src/sim/tools.ts`](./src/sim/tools.ts): push, spark, erase brushes
-- [`src/sim/presets.ts`](./src/sim/presets.ts): preset transforms
-- [`src/sim/image-to-material.ts`](./src/sim/image-to-material.ts): source image conversion
-
-The canvas renderer in [`src/components/CanvasStage.tsx`](./src/components/CanvasStage.tsx) draws the low-resolution frame buffer into a larger display canvas with image smoothing disabled, keeping the pixel edges sharp.
-
-### 4. Scene Files and Loading
-
-[`src/lib/scene-file.ts`](./src/lib/scene-file.ts) owns the validated scene-file contract. [`src/lib/use-scene-workspace.ts`](./src/lib/use-scene-workspace.ts) coordinates source changes, import/export, and playback. [`src/lib/latest-loader.ts`](./src/lib/latest-loader.ts) ensures that delayed uploads or demo responses cannot overwrite a newer request. A failed source load preserves the last committed scene.
-
-Worker load and snapshot requests carry IDs, acknowledge completion, and reject on worker failure or timeout. Loading a snapshot preserves its tick and sets the paused state in the same worker message.
-
-### 5. Clip Export
-
-Bagnold records directly from the display canvas using `canvas.captureStream()` and `MediaRecorder`. Export is intentionally fixed to 8 seconds so the output is lightweight and easy to share, and the downloaded file name includes the active source and preset.
-
-## Project Structure
-
-```text
-public/demo/                  Seeded SVG/PNG demo images
-docs/pixelmelt-workspace.jpg   Current workspace screenshot
-src/components/               React UI and canvas stage
-src/lib/                      Worker bridge, rasterizer, recorder, helpers
-src/sim/                      Pure simulation, conversion, presets, and tests
-src/store/                    Zustand UI state
-src/workers/                  Simulation worker entrypoint
-```
-
-## Validation
-
-Checks available in this repository:
-
-- `npm run lint`
-- `npm test`
-- `npm run build`
-
-## Static Deployment
-
-Bagnold builds to plain static assets:
-
-```bash
+```sh
 npm run build
 ```
 
-Deploy the resulting `dist/` directory to any static host. No environment variables are required. For a subdirectory, pass Vite's base path; bundled demo assets and worker chunks use that base:
-
-```bash
-npm run build -- --base=/demos/pixelmelt/
-```
-
-Tests cover deterministic stepping, image conversion, exact scene-file roundtrips and continuation, corrupt-file rejection, concurrent source loads, worker acknowledgements and failures, and React workspace recovery.
-
-## Browser Notes
-
-- WebM recording works best in current Chromium-based browsers and Firefox.
-- The app is intentionally desktop-first. It will render on smaller screens, but the interaction model is tuned for mouse and trackpad use.
+Serve `dist/` on a static host. For a subdirectory, use `npm run build -- --base=/your/path/`. No environment variables are required.
 
 ## License
 
-MIT
-
-## Project status
-
-AI-assisted personal project. Bundled examples and tests demonstrate a limited scope; they are not evidence of production use or independent validation.
-
-## Design reference
-
-The specimen field and compact control bank take their cues from physical granular-flow experiments. The name refers to [R. A. Bagnold’s sediment-transport research](https://www.usgs.gov/publications/approach-sediment-transport-problem-general-physics). This is a cellular material playground, not a validated implementation of that research. Existing `.pixelmelt` scene files remain supported.
+[MIT](./LICENSE)
