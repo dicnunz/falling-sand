@@ -109,3 +109,35 @@ kbd { font:9px var(--font-mono); }
 @media(max-width:780px) { .workspace { grid-template-columns:1fr; } .canvas-stage { padding:24px 0; } .canvas-wrap { width:min(100%,540px); } .control-panel { border-left:0; border-top:1px solid var(--pm-border); padding:24px 0; display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start; } .control-section + .control-section { margin:0; padding:0; border:0; } .brush-section { grid-column:2; grid-row:1 / 3; } .material-guide,.local-note { margin:0; } }
 @media(max-width:500px) { .app-shell { padding:0 16px; } .app-header { height:auto; padding:20px 0 16px; gap:18px; flex-wrap:wrap; } .brand { font-size:32px; } .brand-description { display:inline-block; font-size:10px; margin-left:17px; } .file-actions { width:100%; gap:6px; } .file-actions .button { flex:1; padding:9px 6px; font-size:10px; gap:5px; } .canvas-surface { padding:9px; } .canvas-wrap { width:100%; } .keyboard-hint { display:none; } .control-panel { display:flex; flex-direction:column; gap:25px; } .control-section,.material-guide { width:100%; } .control-section + .control-section { padding-top:22px; border-top:1px solid var(--pm-border); } .tool-button { min-height:66px; } .demo-button img { width:35px; height:40px; } }
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:1ms!important; transition-duration:0ms!important; } }
+/* Keep the material field primary; readable controls use a consistent spacing scale. */
+:root { --pm-muted:#596153; }
+.app-shell { padding:0 24px; }
+.app-header { height:64px; gap:16px; }
+.brand { font-size:28px; letter-spacing:-1px; }
+.brand-description { font-size:12px; margin-left:16px; }
+.workspace { grid-template-columns:minmax(0,1fr) 288px; min-height:calc(100vh - 64px); }
+.canvas-stage { padding:20px 24px 20px 0; }
+.stage-heading { margin-bottom:16px; gap:16px; }
+.scene-title h1 { font-size:18px; }
+.scene-title > span,.simulation-state { font-size:12px; }
+.canvas-surface { padding:12px; background:#d9d8cf; }
+.canvas-wrap { width:min(100%,max(350px,calc(100vh - 250px))); max-width:840px; }
+.control-panel { padding:20px 0 20px 24px; }
+.section-heading { margin-bottom:12px; }
+.section-heading h2 { font:500 13px/1.5 var(--font-sans); text-transform:none; letter-spacing:0; color:#394533; }
+.button,.file-actions .button { font-size:13px; min-height:40px; }
+.upload-target strong,.demo-button span,.segmented-controls button,.tool-button span,.range-control>span,.material-guide summary,.material-guide strong { font-size:13px; }
+.upload-target small,.muted-note,.range-control output,.material-guide small,.local-note,.demo-heading,.canvas-help,.tick-counter,.material-meter>span,.material-meter strong { font-size:12px; color:#596153; }
+.tool-button kbd { font-size:11px; color:#606b55; }
+.demo-button { padding:8px; gap:8px; }
+.demo-button img { width:32px; height:40px; }
+.tool-button { min-height:80px; }
+.range-control { margin-top:20px; }
+.range-control input { height:24px; margin-top:8px; }
+.material-meter { padding-top:12px; gap:12px; }
+.playback-bar { padding:12px 0; }
+.canvas-help { margin-top:12px; line-height:1.5; }
+.control-section + .control-section { margin-top:24px; padding-top:20px; }
+@media(max-width:1100px) { .workspace { grid-template-columns:minmax(0,1fr) 264px; } .canvas-stage { padding-right:16px; } .control-panel { padding-left:16px; } }
+@media(max-width:780px) { .workspace { grid-template-columns:1fr; } .canvas-stage { padding:20px 0; } .canvas-wrap { width:min(100%,600px); } .control-panel { padding:20px 0; border-left:0; grid-template-columns:1fr 1fr; gap:24px; } .control-section + .control-section { margin:0; padding:0; } }
+@media(max-width:500px) { .app-shell { padding:0 16px; } .app-header { height:auto; padding:16px 0; gap:12px; } .brand-description { display:none; } .file-actions .button { font-size:12px; padding:8px; } .canvas-wrap { width:100%; } .canvas-surface { padding:8px; } .playback-bar { flex-wrap:wrap; } .control-panel { display:flex; } .control-section+.control-section { padding-top:20px; } }
